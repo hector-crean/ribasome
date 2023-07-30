@@ -23,8 +23,7 @@ pub enum BibeServerError {
     CsvError(#[from] csv::Error),
     #[error(transparent)]
     JsonReadError(#[from] crate::csv_ops::JsonReadError),
-    #[error(transparent)]
-    EdgeDbTokioError(#[from] edgedb_tokio::Error),
+
 }
 
 pub type Result<T> = color_eyre::eyre::Result<T, BibeServerError>;

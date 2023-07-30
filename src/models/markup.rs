@@ -1,5 +1,8 @@
 use bevy::{math::Vec3, render::color::Color};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
+use uuid::Uuid;
 
 enum Marker {
     Sphere {
@@ -24,12 +27,20 @@ enum Linker {
     Line,
 }
 
-struct Label {
-    position: Vec3,
+#[derive(Debug, serde::Serialize, serde::Deserialize, sqlx::FromRow)]
+pub struct Comment {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub title: String,
+    pub rich_text: String,
+    pub category: Option<String>,
+    pub published: Option<bool>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
 }
 
-struct Markup {
+pub struct Markup {
     marker: Option<Marker>,
     linker: Option<Linker>,
-    label: Option<Label>,
+    label: Option<Comment>,
 }

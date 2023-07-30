@@ -14,11 +14,13 @@ tower-http = { version = "0.4.0", features = ["cors", "trace"] } # added
 http = "0.2.9"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-sqlx = { version = "0.6.2", features = [
-    "runtime-tokio-rustls",
-    "all",
+sqlx = { version = "0.7.1", features = [
+    "runtime-tokio-rustls", "uuid", "time", "chrono", "postgres"
+
 ] }
 url = "2.3.1"
+
+
 
 uuid = { version = "1.1.2", features = ["serde"] }
 
@@ -26,6 +28,11 @@ uuid = { version = "1.1.2", features = ["serde"] }
 #error handing
 thiserror = "1.0.38"
 color-eyre = "0.6.2"
+miette = { version = "5.10.0", features = ["fancy", "serde"] }
+
+
+config = { version = "0.13.3", default-features = false, features = ["indexmap", "toml"] }
+
 
 #datetime
 chrono = {version = "0.4.24", features = ["serde"] }
@@ -46,14 +53,6 @@ lazy_static = "1.4"
 
 bevy = { version="0.11.0", default-features = false, features=["bevy_render"]}
 
-
-edgedb-derive = "0.5.1"
-edgedb-errors = { version = "0.4.1", features = ["miette"] }
-edgedb-protocol = { version = "0.6.0", features = ["all-types"] }
-edgedb-tokio = { version = "0.5.0", features = ["serde_json", "miette-errors"] }
-miette = { version = "5.10.0", features = ["fancy", "serde"] }
-
-config = { version = "0.13.3", default-features = false, features = ["indexmap", "toml"] }
 
 
 # Defining bin here to make multi stage docker build work

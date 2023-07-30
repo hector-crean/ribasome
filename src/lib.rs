@@ -1,9 +1,7 @@
-pub mod conf;
-pub mod consts;
 pub mod csv_ops;
-pub mod db;
 pub mod errors;
 pub mod models;
+pub mod services;
 
 use axum::{
     routing::{get, post},
@@ -11,11 +9,9 @@ use axum::{
 };
 use dotenv::dotenv;
 use http::Method;
-use std::sync::Arc;
-use tokio::sync::RwLock;
-
-use sqlx::{sqlite::SqlitePoolOptions, Pool, Sqlite};
-use std::{env, net::SocketAddr};
+use services::{markup, user};
+use sqlx::{postgres::PgPoolOptions, PgConnection, Pool, Postgres};
+use std::env;
 use tower_http::{
     cors::{Any, CorsLayer},
     trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer},
@@ -25,20 +21,13 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Clone)]
 pub struct AppState {
-    client: Arc<RwLock<edgedb_tokio::Client>>,
-}
-
-pub async fn initialize_db() -> Result<Arc<RwLock<edgedb_tokio::Client>>, edgedb_tokio::Error> {
-    let pool = edgedb_tokio::create_client().await?;
-
-    pool.ensure_connected().await?;
-    Ok(Arc::new(RwLock::new(pool)))
+    pool: Pool<Postgres>,
 }
 
 pub async fn api() -> errors::Result<axum::Router> {
     dotenv().ok();
 
-    // let db_url: String = env::var("DATABASE_URL")?;
+    let db_url = env::var("DATABASE_URL")?;
 
     tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer())
@@ -49,14 +38,15 @@ pub async fn api() -> errors::Result<axum::Router> {
         .on_response(DefaultOnResponse::new().level(Level::INFO));
 
     // setup connection pool
-    let client = initialize_db().await?;
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&db_url)
+        .await
+        .expect("can't connect to database");
 
-    // sqlx::migrate!("./migrations").run(&pool).await?;
+    sqlx::migrate!("./migrations").run(&pool).await?;
 
-    let state = AppState {
-        client: client.clone(),
-    };
-
+    let state = AppState { pool };
     let cors_layer = CorsLayer::new()
         // allow `GET` and `POST` when accessing the resource
         .allow_methods([Method::GET, Method::POST])
@@ -66,6 +56,8 @@ pub async fn api() -> errors::Result<axum::Router> {
     let router = Router::new()
         .layer(cors_layer)
         .layer(trace_layer)
+        .route("/users", post(user::post::create_user))
+        .route("/comments", post(markup::post::create_comment))
         .with_state(state);
 
     Ok(router)
