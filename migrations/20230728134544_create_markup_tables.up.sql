@@ -4,15 +4,15 @@
 create extension if not exists "uuid-ossp";
 
 -- Create the Role enum type
--- create type Role as enum ('USER', 'SUPERUSER', 'ADMIN', 'MODERATOR');
+create type Role as enum ('USER', 'SUPERUSER', 'ADMIN', 'MODERATOR');
 
 -- Create the User table
 create table users (
     id uuid primary key not null default (uuid_generate_v4()),
     username varchar(100) not null unique,
-    email text not null check (email ~* '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'), -- Corrected regex check
+    email text not null,
     password text not null check (length(password) >= 8 AND password ~ '[A-Z]' AND password ~ '[a-z]' AND password ~ '[0-9]' AND password ~ '[^A-Za-z0-9]'),
-    -- role Role default 'USER',
+    role Role default 'USER',
     updated_at timestamp with time zone default now()
 );
 
