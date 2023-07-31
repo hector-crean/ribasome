@@ -21,7 +21,14 @@ pub async fn create_comment(
 ) -> Result<Json<Comment>, DatabaseError> {
     let inserted_comment: Comment = sqlx::query_as!(
         Comment,
-        "insert into comments(user_id, title, rich_text) values ($1, $2, $3) returning *",
+        // language=PostgreSQL
+        r#"
+            insert into comments(
+                user_id, 
+                title, 
+                rich_text
+            ) values ($1, $2, $3) returning *
+        "#,
         user_id,
         title,
         rich_text

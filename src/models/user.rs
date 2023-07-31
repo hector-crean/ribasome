@@ -9,7 +9,7 @@ pub struct User {
     pub email: String,
     // #[serde(skip_serializing)]
     pub password: String,
-    // pub role: Role,
+    pub role: Role,
     pub updated_at: Option<DateTime<Utc>>,
 }
 

@@ -1,5 +1,5 @@
 [package]
-name = "bibe_server"
+name = "ribasome_server"
 version = "0.1.0"
 edition = "2021"
 
@@ -15,14 +15,21 @@ http = "0.2.9"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 sqlx = { version = "0.7.1", features = [
-    "runtime-tokio-rustls", "uuid", "time", "chrono", "postgres"
+    "runtime-tokio-rustls",
+    "uuid",
+    "time",
+    "chrono",
+    "postgres",
+    "macros",
 
 ] }
 url = "2.3.1"
 
 
-
 uuid = { version = "1.1.2", features = ["serde"] }
+
+#geo
+geo = { version = "0.26.0", features = ["serde"] }
 
 
 #error handing
@@ -31,11 +38,14 @@ color-eyre = "0.6.2"
 miette = { version = "5.10.0", features = ["fancy", "serde"] }
 
 
-config = { version = "0.13.3", default-features = false, features = ["indexmap", "toml"] }
+config = { version = "0.13.3", default-features = false, features = [
+    "indexmap",
+    "toml",
+] }
 
 
 #datetime
-chrono = {version = "0.4.24", features = ["serde"] }
+chrono = { version = "0.4.24", features = ["serde"] }
 
 #env variables
 dotenv = "0.15.0"
@@ -43,7 +53,7 @@ dotenv = "0.15.0"
 serde = { version = "1.0.150", features = ["derive"] }
 serde_json = "1.0.89"
 #enums
-strum ={ version="0.24.1", features=["derive"]}
+strum = { version = "0.24.1", features = ["derive"] }
 
 #file parsers
 csv = "1.2.1"
@@ -51,8 +61,9 @@ csv = "1.2.1"
 regex = "1.7.3"
 lazy_static = "1.4"
 
-bevy = { version="0.11.0", default-features = false, features=["bevy_render"]}
-
+bevy = { version = "0.11.0", default-features = false, features = [
+    "bevy_render",
+] }
 
 
 # Defining bin here to make multi stage docker build work

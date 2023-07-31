@@ -25,12 +25,7 @@ pub async fn create_user(
 ) -> Result<Json<User>, DatabaseError> {
     let user: User = sqlx::query_as!(
         User,
-        r#"insert into users(
-            username, 
-            email, 
-            password,
-            role `models::user::Role`
-        ) values ($1, $2, $3, $4) returning *"#,
+        r#"insert into users(username, email, password, role) values ($1, $2, $3, $4) returning *"#,
         username,
         email,
         password,

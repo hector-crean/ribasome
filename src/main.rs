@@ -1,4 +1,4 @@
-use bibe_server::{api, errors};
+use ribasome_server::{api, errors};
 use std::net::SocketAddr;
 
 #[tokio::main]

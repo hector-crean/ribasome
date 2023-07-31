@@ -1,5 +1,7 @@
 pub mod markup;
 pub mod user;
+pub mod marker_3d;
+
 
 use axum::response::{IntoResponse, Response};
 use http::StatusCode;

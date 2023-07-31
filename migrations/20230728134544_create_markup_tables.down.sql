@@ -1,9 +1,22 @@
 -- Add down migration script here
--- Drop the Comments table
-DROP TABLE IF EXISTS comments;
+-- Drop the 'comment' table and associated indexes
+-- Drop the 'user' table
+DROP TABLE IF EXISTS comment;
 
--- Drop the Users table
-DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS post;
 
+DROP TABLE IF EXISTS annotation;
 
-DROP TYPE IF EXISTS Role; 
+DROP TABLE IF EXISTS marker_3d;
+
+DROP TABLE IF EXISTS point3d;
+
+DROP TABLE IF EXISTS polyline3d;
+
+DROP TYPE IF EXISTS rgba;
+
+DROP TYPE IF EXISTS marker_3d_kind;
+
+DROP TYPE IF EXISTS "vec3<f64>";
+
+DROP TABLE IF EXISTS "user";
