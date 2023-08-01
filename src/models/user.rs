@@ -4,17 +4,17 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, sqlx::FromRow)]
 pub struct User {
-    pub id: Uuid,
+    pub user_id: Uuid,
     pub username: String,
     pub email: String,
     // #[serde(skip_serializing)]
-    pub password: String,
+    pub password_hash: String,
     pub role: Role,
-    pub updated_at: Option<DateTime<Utc>>,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, sqlx::Type)]
-#[sqlx(type_name = "Role", rename_all = "SCREAMING_SNAKE_CASE")]
+#[sqlx(type_name = "role", rename_all = "lowercase")]
 pub enum Role {
     User,
     Superuser,

@@ -9,7 +9,7 @@ use axum::{
 };
 use dotenv::dotenv;
 use http::Method;
-use services::{markup, user};
+use services::{marker_3d, markup, thread, user};
 use sqlx::{postgres::PgPoolOptions, PgConnection, Pool, Postgres};
 use std::env;
 use tower_http::{
@@ -58,7 +58,11 @@ pub async fn api() -> errors::Result<axum::Router> {
         .layer(trace_layer)
         .route("/users", post(user::post::create_user))
         .route("/comments", post(markup::post::create_comment))
+        .route("/marker3ds", post(marker_3d::post::create_marker_3d))
+        .route("/posts", post(thread::post::create_post))
         .with_state(state);
 
-    Ok(router)
+    let api = Router::new().nest("/:version/api", router);
+
+    Ok(api)
 }

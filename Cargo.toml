@@ -70,3 +70,4 @@ bevy = { version = "0.11.0", default-features = false, features = [
 [[bin]]
 name = "rust-demo-server"
 path = "src/main.rs"
+

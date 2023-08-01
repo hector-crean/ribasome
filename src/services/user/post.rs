@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 pub struct CreateUser {
     pub username: String,
     pub email: String,
-    pub password: String,
+    pub password_hash: String,
     pub role: Role,
 }
 
@@ -19,23 +19,22 @@ pub async fn create_user(
     Json(CreateUser {
         username,
         email,
-        password,
+        password_hash,
         role,
     }): Json<CreateUser>,
 ) -> Result<Json<User>, DatabaseError> {
-    let user: User = sqlx::query_as!(
-        User,
-        r#"insert into users(username, email, password, role) values ($1, $2, $3, $4) returning *"#,
-        username,
-        email,
-        password,
-        role
+    let user: User = sqlx::query_as(
+        r#"insert into "user"(username, email, password_hash, role) values ($1, $2, $3, $4) returning user_id, username, email, password_hash, role, updated_at"#,
     )
+    .bind(username)
+    .bind(email)
+    .bind(password_hash)
+    .bind(role)
     .fetch_one(&state.pool)
     .await
     .expect("Unable to insert a user");
 
-    tracing::debug!("create comment: {:?}", user);
+    tracing::debug!("create user: {:?}", user);
 
     Ok(Json(user))
 }

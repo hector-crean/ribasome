@@ -1,16 +1,13 @@
-pub mod markup;
-pub mod user;
 pub mod marker_3d;
-
+pub mod markup;
+pub mod thread;
+pub mod user;
 
 use axum::response::{IntoResponse, Response};
 use http::StatusCode;
 use serde::{Deserialize, Serialize};
 
-//////////
-///
-
-////////////
+trait RibasomeApi {}
 
 #[derive(thiserror::Error, Debug)]
 pub enum DatabaseError {
