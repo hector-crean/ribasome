@@ -2,7 +2,7 @@ use thiserror::Error;
 
 /// ReciteError enumerates all possible errors returned by this library.
 #[derive(Error, Debug)]
-pub enum ribasomeServerError {
+pub enum RibasomeServerError {
     #[error(transparent)]
     IoError(#[from] std::io::Error),
     #[error(transparent)]
@@ -23,6 +23,8 @@ pub enum ribasomeServerError {
     CsvError(#[from] csv::Error),
     #[error(transparent)]
     JsonReadError(#[from] crate::csv_ops::JsonReadError),
+    #[error(transparent)]
+    ReqwestError(#[from] reqwest::Error),
 }
 
-pub type Result<T> = color_eyre::eyre::Result<T, ribasomeServerError>;
+pub type Result<T> = color_eyre::eyre::Result<T, RibasomeServerError>;

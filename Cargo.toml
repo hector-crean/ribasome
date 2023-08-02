@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.25", features = ["full"] }
-
 axum = "0.6.8"
 axum-macros = "0.3.7"
 tower-http = { version = "0.4.0", features = ["cors", "trace"] } # added
@@ -24,50 +23,36 @@ sqlx = { version = "0.7.1", features = [
 
 ] }
 url = "2.3.1"
-
-
 uuid = { version = "1.1.2", features = ["serde"] }
-
-#geo
 geo = { version = "0.26.0", features = ["serde"] }
-
-
-#error handing
 thiserror = "1.0.38"
 color-eyre = "0.6.2"
 miette = { version = "5.10.0", features = ["fancy", "serde"] }
-
-
 config = { version = "0.13.3", default-features = false, features = [
     "indexmap",
     "toml",
 ] }
-
-
-#datetime
 chrono = { version = "0.4.24", features = ["serde"] }
-
-#env variables
 dotenv = "0.15.0"
-#ser-de
 serde = { version = "1.0.150", features = ["derive"] }
 serde_json = "1.0.89"
-#enums
 strum = { version = "0.24.1", features = ["derive"] }
-
-#file parsers
 csv = "1.2.1"
-
 regex = "1.7.3"
 lazy_static = "1.4"
-
 bevy = { version = "0.11.0", default-features = false, features = [
     "bevy_render",
 ] }
+mime = "0.3"
+reqwest = { version = "0.11.18", features = ['json'] }
+
+
+[dev-dependencies]
+hyper = { version = "0.14.17", features = ["full"] }
+tower = { version = "0.4.13", features = ["util"] }
 
 
 # Defining bin here to make multi stage docker build work
 [[bin]]
 name = "rust-demo-server"
 path = "src/main.rs"
-
