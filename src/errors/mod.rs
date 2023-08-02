@@ -1,7 +1,7 @@
-use thiserror::Error;
+pub mod authentication;
 
 /// ReciteError enumerates all possible errors returned by this library.
-#[derive(Error, Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum RibasomeServerError {
     #[error(transparent)]
     IoError(#[from] std::io::Error),

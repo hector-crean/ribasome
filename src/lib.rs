@@ -1,13 +1,17 @@
+pub mod authentication;
 pub mod csv_ops;
 pub mod errors;
 pub mod models;
 pub mod services;
+
+use std::sync::{Arc, Mutex};
 
 use axum::{
     routing::{get, post},
     Router,
 };
 use http::Method;
+use rand_chacha::ChaCha8Rng;
 use services::{marker_3d, markup, thread, user};
 use sqlx::{Pool, Postgres};
 use tower_http::{
@@ -15,6 +19,11 @@ use tower_http::{
     trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer},
 };
 use tracing::Level;
+
+pub type Random = Arc<Mutex<ChaCha8Rng>>;
+
+const USER_COOKIE_NAME: &str = "user_token";
+const COOKIE_MAX_AGE: &str = "9999999";
 
 #[derive(Clone)]
 pub struct AppState {
