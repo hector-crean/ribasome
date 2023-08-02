@@ -1,5 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::convert::AsRef;
+use strum::AsRefStr;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, sqlx::FromRow)]
@@ -13,7 +15,9 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, sqlx::Type)]
+#[derive(
+    Debug, Clone, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize, sqlx::Type, AsRefStr,
+)]
 #[sqlx(type_name = "role", rename_all = "lowercase")]
 pub enum Role {
     User,

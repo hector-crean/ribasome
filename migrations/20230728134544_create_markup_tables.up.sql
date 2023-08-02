@@ -15,15 +15,19 @@ create table "user" (
     updated_at timestamp with time zone default now()
 );
 
+create table if not exists session (
+    session_token uuid primary key not null default (uuid_generate_v4()),
+    user_id uuid references user (user_id) on delete cascade
+);
 
 -- utility types: coordinates
-create type vec3_f64  as (
+create type vec3_f64 as (
     x double precision,
     y double precision,
     z double precision
 );
 
-create domain coords AS vec3_f64[];
+create domain coords AS vec3_f64 [];
 
 -- markers
 create table point_3d (
@@ -62,8 +66,6 @@ CREATE TABLE marker_3d (
         )
     )
 );
-
-
 
 create table post (
     post_id uuid primary key default uuid_generate_v4(),

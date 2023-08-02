@@ -13,7 +13,6 @@ DROP TABLE IF EXISTS point3d;
 
 DROP TABLE IF EXISTS polyline3d;
 
-
 DROP TABLE IF EXISTS point_3d;
 
 DROP TABLE IF EXISTS polyline_3d;
@@ -21,7 +20,6 @@ DROP TABLE IF EXISTS polyline_3d;
 DROP TABLE IF EXISTS "user";
 
 DROP TYPE IF EXISTS role;
-
 
 DROP TYPE IF EXISTS role_enum;
 
@@ -35,4 +33,4 @@ DROP TYPE IF EXISTS coords;
 
 DROP TYPE IF EXISTS vec3_f64;
 
-
+DROP TYPE IF EXISTS session;
