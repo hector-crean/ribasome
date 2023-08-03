@@ -6,13 +6,10 @@ pub mod services;
 
 use std::sync::{Arc, Mutex};
 
-use axum::{
-    routing::{get, post},
-    Router,
-};
+use axum::{routing::post, Router};
 use http::Method;
 use rand_chacha::ChaCha8Rng;
-use services::{marker_3d, markup, thread, user};
+use services::{marker_3d, markup, s3::S3Bucket, thread, user};
 use sqlx::{Pool, Postgres};
 use tower_http::{
     cors::{Any, CorsLayer},
@@ -28,12 +25,17 @@ const COOKIE_MAX_AGE: &str = "9999999";
 #[derive(Clone)]
 pub struct AppState {
     pool: Pool<Postgres>,
+    bucket: S3Bucket,
     random: Random,
 }
 
 impl AppState {
-    pub fn new(pool: Pool<Postgres>, random: Random) -> Self {
-        Self { pool, random }
+    pub fn new(pool: Pool<Postgres>, bucket: S3Bucket, random: Random) -> Self {
+        Self {
+            pool,
+            bucket,
+            random,
+        }
     }
 
     pub async fn router(self) -> errors::Result<axum::Router> {

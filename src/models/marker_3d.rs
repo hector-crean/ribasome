@@ -1,4 +1,4 @@
-use super::coord::{Coords, Vec3f64};
+use super::linear_algebra::{Vec3, Vec3Array};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, sqlx::Type)]
 #[sqlx(type_name = "marker_3d_kind")] // only for PostgreSQL to match a type definition
@@ -10,6 +10,6 @@ pub enum Marker3dKind {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum Marker3d {
-    Point3d { coord: Vec3f64 },
-    Polyline3d { coords: Coords },
+    Point3d { coord: Vec3 },
+    Polyline3d { coords: Vec3Array },
 }

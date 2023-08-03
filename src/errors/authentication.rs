@@ -22,10 +22,10 @@ impl IntoResponse for SignupError {
     fn into_response(self) -> axum::response::Response {
         match self {
             SignupError::UsernameExists(username) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("{}", username)).into_response()
+                (StatusCode::INTERNAL_SERVER_ERROR, username.to_string()).into_response()
             }
 
-            _ => (StatusCode::INTERNAL_SERVER_ERROR, format!("Unkown Error")).into_response(),
+            _ => (StatusCode::INTERNAL_SERVER_ERROR, "Unkown Error".to_string()).into_response(),
         }
     }
 }

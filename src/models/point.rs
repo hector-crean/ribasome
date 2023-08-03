@@ -1,5 +1,5 @@
 use geo::Polygon;
-use sqlx::postgres::PgConnection;
+
 use sqlx::FromRow; // or any other types you need from rust-geo
 
 #[derive(Debug, FromRow)]

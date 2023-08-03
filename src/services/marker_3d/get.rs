@@ -1,17 +1,10 @@
-use bevy::prelude::Vec3;
-use serde::Serialize;
-use sqlx::{postgres::types::PgHasArrayType, Pool, Postgres};
+use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
-    models::{
-        coord::{Coords, Vec3f64},
-        marker_3d::{Marker3d, Marker3dKind},
-    },
+    models::linear_algebra::{Vec3, Vec3Array},
     services::DatabaseError,
-    AppState,
 };
-use axum::{extract::State, response::Json};
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum GetMarker3d {
@@ -47,13 +40,13 @@ pub async fn get_markers_by_post_id(
 #[derive(Debug, sqlx::FromRow)]
 pub struct Point3dRow {
     pub point_id: uuid::Uuid,
-    pub coord: Vec3f64,
+    pub coord: Vec3,
 }
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct Polyline3dRow {
     pub polyline_id: uuid::Uuid,
-    pub coords: Coords,
+    pub coords: Vec3Array,
 }
 
 pub async fn get_point_3d_by_marker_id(

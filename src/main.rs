@@ -1,26 +1,18 @@
+use aws_sdk_s3::Region;
 use dotenv::dotenv;
+use ribasome_server::services::s3::S3Bucket;
 use ribasome_server::{errors, AppState};
 use sqlx::postgres::PgPoolOptions;
+use std::convert::From;
 
 use std::{
-    convert::AsRef,
     env,
     net::SocketAddr,
     sync::{Arc, Mutex},
 };
 
-use tower_http::{
-    cors::{Any, CorsLayer},
-    trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer},
-};
-use tracing::Level;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use axum::{
-    extract::ConnectInfo,
-    routing::{get, post},
-    Json, Router,
-};
 use pbkdf2::password_hash::rand_core::OsRng;
 use rand_chacha::ChaCha8Rng;
 use rand_core::{RngCore, SeedableRng};
@@ -46,9 +38,27 @@ async fn main() -> errors::Result<()> {
         .await
         .expect("can't connect to database");
 
+    let aws_key = std::env::var("AWS_ACCESS_KEY_ID").expect("Failed to get AWS key.");
+    let aws_key_secret =
+        std::env::var("AWS_SECRET_ACCESS_KEY").expect("Failed to get AWS secret key.");
+    let S3_REGION = std::env::var("S3_REGION").unwrap_or("eu-west-2".to_string());
+    let aws_bucket = std::env::var("S3_BUCKET_NAME").expect("Failed to get AWS Bucket key");
+    let aws_config = aws_sdk_s3::config::Builder::new()
+        .region(aws_sdk_s3::Region::new(S3_REGION))
+        .credentials_provider(aws_sdk_s3::Credentials::new(
+            aws_key,
+            aws_key_secret,
+            None,
+            None,
+            "loaded-from-custom-env",
+        ))
+        .build();
+
+    let bucket = S3Bucket::new(aws_config, &aws_bucket);
+
     let random = ChaCha8Rng::seed_from_u64(OsRng.next_u64());
 
-    let router = AppState::new(pool, Arc::new(Mutex::new(random)))
+    let router = AppState::new(pool, bucket, Arc::new(Mutex::new(random)))
         .router()
         .await?;
 
@@ -63,40 +73,67 @@ async fn main() -> errors::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::{
-        body::Body,
-        extract::connect_info::MockConnectInfo,
-        http::{self, Request, StatusCode},
-    };
-    use ribasome_server::{
-        models::user::{Role, User},
-        services::user::post::CreateUser,
-    };
-    use serde_json::{json, Value};
-    use std::net::SocketAddr;
-    use tokio::net::TcpListener;
-    use tower::Service; // for `call`
-    use tower::ServiceExt; // for `oneshot` and `ready`
 
-    #[tokio::test]
-    async fn hello_world() -> errors::Result<()> {
+    use ribasome_server::{
+        models::{linear_algebra::Vec3, post::Post},
+        services::{
+            marker_3d::post::CreateMarker3d,
+            s3::S3Bucket,
+            thread::post::CreatePost,
+            user::post::{CreateUser, CreateUserResponse},
+        },
+    };
+    use serde_json::json;
+    use std::net::SocketAddr;
+
+    // for `call`
+    // for `oneshot` and `ready`
+
+    async fn router_instance() -> errors::Result<(SocketAddr, axum::Router)> {
         dotenv().ok();
 
         let addr = SocketAddr::from(([127, 0, 0, 1], 1691));
 
-        let db_url = env::var("DATABASE_URL")?;
+        let db_url = env::var("DATABASE_URL").unwrap(); // Unwrap here for simplicity in tests
 
         let pool = PgPoolOptions::new()
             .max_connections(5)
             .connect(&db_url)
             .await
-            .expect("can't connect to database");
+            .expect("can't connect to the database");
+
+        let aws_key = std::env::var("AWS_ACCESS_KEY_ID").expect("Failed to get AWS key.");
+        let aws_key_secret =
+            std::env::var("AWS_SECRET_ACCESS_KEY").expect("Failed to get AWS secret key.");
+        let S3_REGION = std::env::var("S3_REGION").unwrap_or("eu-west-2".to_string());
+        let aws_bucket = std::env::var("S3_BUCKET_NAME").expect("Failed to get AWS Bucket key");
+        let aws_config = aws_sdk_s3::config::Builder::new()
+            .region(aws_sdk_s3::Region::new(S3_REGION))
+            .credentials_provider(aws_sdk_s3::Credentials::new(
+                aws_key,
+                aws_key_secret,
+                None,
+                None,
+                "loaded-from-custom-env",
+            ))
+            .build();
+
+        let bucket = S3Bucket::new(aws_config, &aws_bucket);
 
         let random = ChaCha8Rng::seed_from_u64(OsRng.next_u64());
 
-        let router = AppState::new(pool, Arc::new(Mutex::new(random)))
+        let router = AppState::new(pool, bucket, Arc::new(Mutex::new(random)))
             .router()
             .await?;
+
+        Ok((addr, router))
+    }
+
+    #[tokio::test]
+    async fn mock_create_user() -> errors::Result<()> {
+        dotenv().ok();
+
+        let (addr, router) = router_instance().await?;
 
         tokio::spawn(async move {
             axum::Server::bind(&addr)
@@ -108,25 +145,43 @@ mod tests {
         let client = reqwest::Client::new();
 
         // Create a `CreateUser` instance
-        let user = CreateUser {
-            username: "leon_cav".to_string(),
-            email: "leon@r42.com".to_string(),
-            password: "leonardo".to_string(),
-            role: Role::User,
-        };
+        let user: CreateUser = rand::random();
 
-        let resp = client
+        let CreateUserResponse {
+            session_token,
+            user_id,
+        } = client
             .post(format!("http://{}/v1/api/users", addr))
             .json(&json!(user))
             .send()
             .await?
-            .json::<User>()
+            .json::<CreateUserResponse>()
             .await?;
 
-        println!("{:?}", &resp);
+        let post = CreatePost {
+            user_id,
+            rich_text: "Some top quality content".to_string(),
+            create_marker_3d: Some(CreateMarker3d::Point3d {
+                coord: bevy::math::Vec3::new(1., 2., 3.).into(),
+            }),
+        };
+
+        let post_resp = client
+            .post(format!("http://{}/v1/api/posts", addr))
+            .json(&json!(post))
+            .send()
+            .await?
+            .json::<Post>()
+            .await?;
+
+        println!("{:?}", &post_resp);
 
         assert_eq!(1, 1);
 
         Ok(())
     }
 }
+
+// create user
+// create post
+//

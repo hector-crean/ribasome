@@ -1,21 +1,20 @@
-use std::str::FromStr;
-
 use crate::{
     authentication::{new_session, SessionToken},
     errors::authentication::SignupError,
-    models::user::{Role, User},
-    services::DatabaseError,
+    models::user::Role,
     AppState,
 };
-use axum::{
-    extract::State,
-    response::{IntoResponse, Json},
-};
+
+use axum::{extract::State, response::Json};
 use pbkdf2::{
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{PasswordHasher, SaltString},
     Pbkdf2,
 };
-use rand_core::{OsRng, RngCore};
+use rand::{
+    distributions::{Alphanumeric, Distribution, Standard},
+    prelude::*,
+};
+use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -35,6 +34,7 @@ struct UserRow {
 #[derive(Debug, serde::Serialize, serde::Deserialize, sqlx::FromRow)]
 pub struct CreateUserResponse {
     pub session_token: SessionToken,
+    pub user_id: Uuid,
 }
 
 pub async fn create_user(
@@ -71,5 +71,38 @@ pub async fn create_user(
 
     let session_token = new_session(&state.pool, state.random, user_id).await;
 
-    Ok(Json(CreateUserResponse { session_token }))
+    Ok(Json(CreateUserResponse {
+        session_token,
+        user_id,
+    }))
+}
+
+// utils
+impl Distribution<CreateUser> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, mut rng: &mut R) -> CreateUser {
+        let username = (&mut rng)
+            .sample_iter(&Alphanumeric)
+            .take(8)
+            .map(char::from)
+            .collect::<String>();
+
+        let email_radix = (&mut rng)
+            .sample_iter(&Alphanumeric)
+            .take(8)
+            .map(char::from)
+            .collect::<String>();
+
+        let password = (&mut rng)
+            .sample_iter(&Alphanumeric)
+            .take(12)
+            .map(char::from)
+            .collect::<String>();
+
+        CreateUser {
+            username,
+            email: format!("{}@r42.com", email_radix),
+            password,
+            role: Role::User,
+        }
+    }
 }

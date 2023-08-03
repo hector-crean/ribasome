@@ -1,10 +1,7 @@
 use crate::{models::user::User, Random, USER_COOKIE_NAME};
 
-use pbkdf2::{
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Pbkdf2,
-};
-use rand_core::{OsRng, RngCore};
+
+use rand_core::{RngCore};
 use sqlx::{Pool, Postgres};
 use std::str::FromStr;
 use uuid::Uuid;
@@ -49,7 +46,7 @@ impl AuthState {
 
         if store.is_none() {
             const QUERY: &str =
-                "SELECT user_id, username, password_hash, email, role, updated_at FROM users JOIN sessions ON user_id = id WHERE session_token = $1;";
+                "SELECT user_id, username, password_hash, email, role, updated_at FROM users JOIN session ON user_id = id WHERE session_token = $1;";
 
             let user: Option<User> = sqlx::query_as(QUERY)
                 .bind(&session_token.into_database_value())
@@ -70,7 +67,7 @@ pub(crate) async fn new_session(
     random: Random,
     user_id: Uuid,
 ) -> SessionToken {
-    const QUERY: &str = "INSERT INTO sessions (session_token, user_id) VALUES ($1, $2);";
+    const QUERY: &str = "INSERT INTO session (session_token, user_id) VALUES ($1, $2);";
 
     let session_token = SessionToken::generate_new(random);
 

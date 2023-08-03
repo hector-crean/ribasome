@@ -1,6 +1,11 @@
-pub mod coord;
+pub mod comment;
+pub mod linear_algebra;
 pub mod marker_3d;
 pub mod markup;
+pub mod node;
+pub mod notebook;
 pub mod point;
-pub mod thread;
+pub mod post;
+pub mod scene_3d;
+pub mod uploaded_file;
 pub mod user;
