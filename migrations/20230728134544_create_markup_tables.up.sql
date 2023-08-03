@@ -16,7 +16,7 @@ create table "user" (
 );
 
 create table if not exists session (
-    session_token uuid primary key not null default (uuid_generate_v4()),
+    session_token BYTEA PRIMARY KEY,
     user_id uuid references "user"(user_id) on delete cascade
 );
 

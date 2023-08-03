@@ -69,8 +69,9 @@ mod tests {
         http::{self, Request, StatusCode},
     };
     use ribasome_server::{
+        authentication::SessionToken,
         models::user::{Role, User},
-        services::user::post::CreateUser,
+        services::user::post::{CreateUser, CreateUserResponse},
     };
     use serde_json::{json, Value};
     use std::net::SocketAddr;
@@ -79,7 +80,7 @@ mod tests {
     use tower::ServiceExt; // for `oneshot` and `ready`
 
     #[tokio::test]
-    async fn hello_world() -> errors::Result<()> {
+    async fn mock_create_user() -> errors::Result<()> {
         dotenv().ok();
 
         let addr = SocketAddr::from(([127, 0, 0, 1], 1691));
@@ -108,19 +109,14 @@ mod tests {
         let client = reqwest::Client::new();
 
         // Create a `CreateUser` instance
-        let user = CreateUser {
-            username: "leon_cav".to_string(),
-            email: "leon@r42.com".to_string(),
-            password: "leonardo".to_string(),
-            role: Role::User,
-        };
+        let user: CreateUser = rand::random();
 
         let resp = client
             .post(format!("http://{}/v1/api/users", addr))
             .json(&json!(user))
             .send()
             .await?
-            .json::<User>()
+            .json::<CreateUserResponse>()
             .await?;
 
         println!("{:?}", &resp);
