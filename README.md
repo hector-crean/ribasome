@@ -6,6 +6,8 @@ The API is built using the [Axum](https://github.com/tokio-rs/axum) web framewor
 
 The API provides endpoints to create various resources like users, comments, marker3ds, and posts. The API is versioned using a version parameter in the URL path. The version number will be part of the URL path as `/:version/api`.
 
+The API is integrated with a **postgres** instance, and an **Amazon S3 bucket**, which enables data to be persisted. S3 stores assets; the assets' respective keys are stored in an asset table in the postgres database.
+
 ## Prerequisites
 
 Before running the API, ensure you have the following set up:
