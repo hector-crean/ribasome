@@ -53,32 +53,47 @@ async fn main() -> errors::Result<()> {
 mod tests {
     use super::*;
 
-    use ribasome_server::services::user::post::{CreateUser, CreateUserResponse};
+    use ribasome_server::{
+        models::{linear_algebra::Vec3f64, post::Post},
+        services::{
+            marker_3d::post::CreateMarker3d,
+            thread::post::CreatePost,
+            user::post::{CreateUser, CreateUserResponse},
+        },
+    };
     use serde_json::json;
     use std::net::SocketAddr;
 
     // for `call`
     // for `oneshot` and `ready`
 
-    #[tokio::test]
-    async fn mock_create_user() -> errors::Result<()> {
+    async fn router_instance() -> errors::Result<(SocketAddr, axum::Router)> {
         dotenv().ok();
 
         let addr = SocketAddr::from(([127, 0, 0, 1], 1691));
 
-        let db_url = env::var("DATABASE_URL")?;
+        let db_url = env::var("DATABASE_URL").unwrap(); // Unwrap here for simplicity in tests
 
         let pool = PgPoolOptions::new()
             .max_connections(5)
             .connect(&db_url)
             .await
-            .expect("can't connect to database");
+            .expect("can't connect to the database");
 
         let random = ChaCha8Rng::seed_from_u64(OsRng.next_u64());
 
         let router = AppState::new(pool, Arc::new(Mutex::new(random)))
             .router()
             .await?;
+
+        Ok((addr, router))
+    }
+
+    #[tokio::test]
+    async fn mock_create_user() -> errors::Result<()> {
+        dotenv().ok();
+
+        let (addr, router) = router_instance().await?;
 
         tokio::spawn(async move {
             axum::Server::bind(&addr)
@@ -92,7 +107,10 @@ mod tests {
         // Create a `CreateUser` instance
         let user: CreateUser = rand::random();
 
-        let resp = client
+        let CreateUserResponse {
+            session_token,
+            user_id,
+        } = client
             .post(format!("http://{}/v1/api/users", addr))
             .json(&json!(user))
             .send()
@@ -100,10 +118,30 @@ mod tests {
             .json::<CreateUserResponse>()
             .await?;
 
-        println!("{:?}", &resp);
+        let post = CreatePost {
+            user_id,
+            rich_text: "Some top quality content".to_string(),
+            create_marker_3d: Some(CreateMarker3d::Point3d {
+                coord: Vec3f64::new(1., 2., 3.),
+            }),
+        };
+
+        let post_resp = client
+            .post(format!("http://{}/v1/api/posts", addr))
+            .json(&json!(post))
+            .send()
+            .await?
+            .json::<Post>()
+            .await?;
+
+        println!("{:?}", &post_resp);
 
         assert_eq!(1, 1);
 
         Ok(())
     }
 }
+
+// create user
+// create post
+//

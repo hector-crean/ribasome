@@ -1,11 +1,11 @@
 pub mod marker_3d;
 pub mod markup;
+pub mod s3;
 pub mod thread;
 pub mod user;
 
 use axum::response::{IntoResponse, Response};
 use http::StatusCode;
-
 
 trait RibasomeApi {}
 
@@ -28,9 +28,11 @@ impl IntoResponse for DatabaseError {
             DatabaseError::ChronoParseError(err) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, format!("{}", err)).into_response()
             }
-            DatabaseError::Unknown => {
-                (StatusCode::INTERNAL_SERVER_ERROR, "Unkown Error".to_string()).into_response()
-            }
+            DatabaseError::Unknown => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Unkown Error".to_string(),
+            )
+                .into_response(),
         }
     }
 }

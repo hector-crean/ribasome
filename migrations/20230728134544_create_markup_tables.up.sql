@@ -21,23 +21,30 @@ create table if not exists session (
 );
 
 -- utility types: coordinates
-create type vec3_f64 as (
+create type vec3 as (
     x double precision,
     y double precision,
     z double precision
 );
 
-create domain coords AS vec3_f64 [];
+create type quat as (
+    x double precision,
+    y double precision,
+    z double precision,
+    w double precision
+);
+
+create domain vec3_array AS vec3 [];
 
 -- markers
 create table point_3d (
     point_id uuid primary key not null default (uuid_generate_v4()),
-    coord vec3_f64
+    coord vec3
 );
 
 create table polyline_3d (
     polyline_id uuid primary key not null default (uuid_generate_v4()),
-    coords coords
+    coords vec3_array
 );
 
 create type marker_3d_kind as enum ('polyline3d', 'point3d');
@@ -91,3 +98,29 @@ create table comment (
 );
 
 create index on comment(post_id, created_at);
+
+create domain posts AS post [];
+
+create table glb (
+    glb_id uuid primary key not null default (uuid_generate_v4()),
+    url varchar not null,
+    title varchar not null,
+    translation vec3,
+    rotation quat,
+    scale vec3,
+    published boolean default false,
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now()
+);
+
+create domain glbs AS glb [];
+
+create table scene_3d (
+    scene_id uuid primary key not null default (uuid_generate_v4()),
+    title varchar(255) not null,
+    published boolean default false,
+    created_at timestamp with time zone default now(),
+    updated_at timestamp with time zone default now(),
+    glbs glbs,
+    post posts
+);

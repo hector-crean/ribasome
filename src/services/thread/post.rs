@@ -1,8 +1,6 @@
 use crate::services::marker_3d::post::{insert_marker_3d, CreateMarker3d, CreateMarker3dResponse};
-use crate::{models::thread::Post, services::DatabaseError, AppState};
+use crate::{models::post::Post, services::DatabaseError, AppState};
 use axum::{extract::State, response::Json};
-
-
 
 use uuid::Uuid;
 
