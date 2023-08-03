@@ -1,48 +1,41 @@
--- Add down migration script here
--- Drop the 'comment' table and associated indexes
--- Drop the 'user' table
-DROP TABLE IF EXISTS comment;
+-- scene_3d
+drop table if exists scene_3d;
 
-DROP TABLE IF EXISTS post;
+-- glb
+drop domain if exists glbs;
+drop table if exists glb;
 
-DROP TABLE IF EXISTS annotation;
+-- comment
+drop index if exists comment_post_id_created_at_idx;
+drop table if exists comment;
 
-DROP TABLE IF EXISTS marker_3d;
+-- post
+drop index if exists post_created_at_desc_idx;
+drop domain if exists posts;
+drop table if exists post;
 
-DROP TABLE IF EXISTS point3d;
+-- marker_3d
+drop table if exists marker_3d;
+drop type if exists marker_3d_kind;
 
-DROP TABLE IF EXISTS polyline3d;
+-- polyline_3d
+drop table if exists polyline_3d;
 
-DROP TABLE IF EXISTS point_3d;
+-- point_3d
+drop table if exists point_3d;
 
-DROP TABLE IF EXISTS polyline_3d;
+-- utility types: coordinates
+drop domain if exists vec3_array;
+drop type if exists quat;
+drop type if exists vec3;
 
-DROP TABLE IF EXISTS session;
+-- session
+drop table if exists session;
 
-DROP TABLE IF EXISTS "user";
+-- user
+drop table if exists "user";
+drop type if exists role;
 
-DROP TYPE IF EXISTS role;
-
-DROP TYPE IF EXISTS role_enum;
-
-DROP TYPE IF EXISTS rgba;
-
-DROP TYPE IF EXISTS marker_3d_kind;
-
-DROP TYPE IF EXISTS coords;
-
-DROP TYPE IF EXISTS vec3_f64;
-
-DROP TYPE IF EXISTS vec3;
-
-DROP TYPE IF EXISTS vec3_array;
-
-DROP TYPE IF EXISTS quat;
-
-DROP TYPE IF EXISTS session;
-
-DROP TYPE IF EXISTS scene_3d;
-
-DROP TYPE IF EXISTS glbs;
-
-DROP TYPE IF EXISTS posts;
+-- postgis & uuid-ossp extensions
+-- drop extension if exists "postgis";
+-- drop extension if exists "uuid-ossp";

@@ -1,16 +1,11 @@
 use std::path::Path;
 
 use aws_sdk_s3::{
-    client::Client,
-    config::{Credentials, Region},
-    error::SdkError,
-    operation::put_object::PutObjectError,
-    primitives::ByteStream,
-    Config,
+    client::Client, error::SdkError, operation::put_object::PutObjectError, primitives::ByteStream,
 };
+
 // use aws_smith_http::error;
-use dotenv::dotenv;
-use rand::Rng;
+
 use tokio::io::AsyncReadExt;
 
 #[derive(Clone)]
@@ -99,8 +94,9 @@ impl S3Bucket {
 }
 
 #[cfg(test)]
-mod tests {
-    use rand::distributions::Alphanumeric;
+pub mod tests {
+    use aws_sdk_s3::config::{Credentials, Region};
+    use rand::{distributions::Alphanumeric, Rng};
 
     use super::*;
 
@@ -108,9 +104,13 @@ mod tests {
     // for `oneshot` and `ready`
 
     async fn bucket_singleton() -> Result<S3Bucket, S3Error> {
+        use dotenv::dotenv;
+
+        dotenv().ok();
+
         let aws_key = std::env::var("AWS_ACCESS_KEY_ID")?;
         let aws_key_secret = std::env::var("AWS_SECRET_ACCESS_KEY")?;
-        let s3_region = std::env::var("S3_REGION")?;
+        let s3_region = std::env::var("AWS_REGION")?;
         let aws_bucket = std::env::var("S3_BUCKET_NAME")?;
 
         let aws_config = aws_sdk_s3::config::Builder::new()
