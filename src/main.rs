@@ -1,3 +1,4 @@
+use aws_sdk_s3::Region;
 use dotenv::dotenv;
 use ribasome_server::services::s3::S3Bucket;
 use ribasome_server::{errors, AppState};
@@ -37,9 +38,27 @@ async fn main() -> errors::Result<()> {
         .await
         .expect("can't connect to database");
 
+    let aws_key = std::env::var("AWS_ACCESS_KEY_ID").expect("Failed to get AWS key.");
+    let aws_key_secret =
+        std::env::var("AWS_SECRET_ACCESS_KEY").expect("Failed to get AWS secret key.");
+    let S3_REGION = std::env::var("S3_REGION").unwrap_or("eu-west-2".to_string());
+    let aws_bucket = std::env::var("S3_BUCKET_NAME").expect("Failed to get AWS Bucket key");
+    let aws_config = aws_sdk_s3::config::Builder::new()
+        .region(aws_sdk_s3::Region::new(S3_REGION))
+        .credentials_provider(aws_sdk_s3::Credentials::new(
+            aws_key,
+            aws_key_secret,
+            None,
+            None,
+            "loaded-from-custom-env",
+        ))
+        .build();
+
+    let bucket = S3Bucket::new(aws_config, &aws_bucket);
+
     let random = ChaCha8Rng::seed_from_u64(OsRng.next_u64());
 
-    let router = AppState::new(pool, S3Bucket::new(None), Arc::new(Mutex::new(random)))
+    let router = AppState::new(pool, bucket, Arc::new(Mutex::new(random)))
         .router()
         .await?;
 
@@ -83,9 +102,27 @@ mod tests {
             .await
             .expect("can't connect to the database");
 
+        let aws_key = std::env::var("AWS_ACCESS_KEY_ID").expect("Failed to get AWS key.");
+        let aws_key_secret =
+            std::env::var("AWS_SECRET_ACCESS_KEY").expect("Failed to get AWS secret key.");
+        let S3_REGION = std::env::var("S3_REGION").unwrap_or("eu-west-2".to_string());
+        let aws_bucket = std::env::var("S3_BUCKET_NAME").expect("Failed to get AWS Bucket key");
+        let aws_config = aws_sdk_s3::config::Builder::new()
+            .region(aws_sdk_s3::Region::new(S3_REGION))
+            .credentials_provider(aws_sdk_s3::Credentials::new(
+                aws_key,
+                aws_key_secret,
+                None,
+                None,
+                "loaded-from-custom-env",
+            ))
+            .build();
+
+        let bucket = S3Bucket::new(aws_config, &aws_bucket);
+
         let random = ChaCha8Rng::seed_from_u64(OsRng.next_u64());
 
-        let router = AppState::new(pool, S3Bucket::new(None), Arc::new(Mutex::new(random)))
+        let router = AppState::new(pool, bucket, Arc::new(Mutex::new(random)))
             .router()
             .await?;
 
