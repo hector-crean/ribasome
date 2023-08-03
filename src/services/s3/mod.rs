@@ -1,6 +1,14 @@
 use std::path::Path;
 
-use aws_sdk_s3::{client::Client, types::ByteStream, Credentials, Region};
+use aws_sdk_s3::{
+    client::Client,
+    config::{Credentials, Region},
+    error::SdkError,
+    operation::put_object::PutObjectError,
+    primitives::ByteStream,
+    Config,
+};
+// use aws_smith_http::error;
 use dotenv::dotenv;
 use rand::Rng;
 use tokio::io::AsyncReadExt;
@@ -8,29 +16,42 @@ use tokio::io::AsyncReadExt;
 #[derive(Clone)]
 pub struct S3Bucket {
     client: Client,
+    region: String,
     bucket_name: String,
 }
 
 #[derive(thiserror::Error, Debug)]
 pub enum S3Error {
+    #[error("File not found")]
+    FileNotFound(#[from] std::io::Error),
+
+    #[error("File size conversion error")]
+    FileSizeConversion(#[from] std::num::TryFromIntError),
+
     #[error(transparent)]
-    S3Error(aws_sdk_s3::Error),
+    S3Error(#[from] aws_sdk_s3::Error),
+
+    #[error(transparent)]
+    PutObjectError(#[from] SdkError<PutObjectError>),
+
+    #[error("Environment variable error")]
+    EnvVarError(#[from] std::env::VarError),
 }
 
 impl S3Bucket {
-    pub fn new(config: aws_sdk_s3::Config, bucket_name: &str) -> Self {
+    pub fn new(config: aws_sdk_s3::Config, region: &str, bucket_name: &str) -> Self {
         Self {
             client: aws_sdk_s3::Client::from_conf(config),
+            region: region.to_string(),
             bucket_name: bucket_name.to_string(),
         }
     }
 
-    pub fn url(&self, key: &str) -> String {
-        format!(
+    pub fn url(&self, key: &str) -> Result<String, S3Error> {
+        Ok(format!(
             "https://{}.s3.{}.amazonaws.com/{key}",
-            std::env::var("AWS_S3_BUCKET_NAME").unwrap(),
-            std::env::var("S3_REGION").unwrap(),
-        )
+            self.bucket_name, self.region,
+        ))
     }
 
     pub async fn upload_object<P: AsRef<Path>>(
@@ -38,44 +59,42 @@ impl S3Bucket {
         file_path: P,
         key: &str,
     ) -> Result<String, S3Error> {
-        let mut file = tokio::fs::File::open(file_path)
-            .await
-            .expect("File not found");
+        let mut file = tokio::fs::File::open(file_path).await?;
 
         let size_estimate: usize = file
             .metadata()
             .await
             .map(|md| md.len())
             .unwrap_or(1024)
-            .try_into()
-            .expect("file too big");
+            .try_into()?;
 
         let mut contents = Vec::with_capacity(size_estimate);
-        file.read_to_end(&mut contents)
-            .await
-            .expect("Read to end of file failed");
 
-        let _res = self
+        file.read_to_end(&mut contents).await?;
+
+        let _put_object_output = self
             .client
             .put_object()
             .bucket(&self.bucket_name)
             .key(key)
             .body(ByteStream::from(contents))
             .send()
-            .await
-            .expect("Failed to put object");
+            .await?;
 
-        Ok(self.url(key))
+        let url = self.url(key)?;
+
+        Ok(url)
     }
 
-    pub async fn delete_file(&self, key: &str) -> bool {
-        self.client
+    pub async fn delete_file(&self, key: &str) -> Result<bool, S3Error> {
+        Ok(self
+            .client
             .delete_object()
             .bucket(&self.bucket_name)
             .key(key)
             .send()
             .await
-            .is_ok()
+            .is_ok())
     }
 }
 
@@ -88,17 +107,15 @@ mod tests {
     // for `call`
     // for `oneshot` and `ready`
 
-    async fn bucket_singleton() -> S3Bucket {
-        dotenv().ok();
+    async fn bucket_singleton() -> Result<S3Bucket, S3Error> {
+        let aws_key = std::env::var("AWS_ACCESS_KEY_ID")?;
+        let aws_key_secret = std::env::var("AWS_SECRET_ACCESS_KEY")?;
+        let s3_region = std::env::var("S3_REGION")?;
+        let aws_bucket = std::env::var("S3_BUCKET_NAME")?;
 
-        let aws_key = std::env::var("AWS_ACCESS_KEY_ID").expect("Failed to get AWS key.");
-        let aws_key_secret =
-            std::env::var("AWS_SECRET_ACCESS_KEY").expect("Failed to get AWS secret key.");
-        let s3_region = std::env::var("S3_REGION").unwrap_or("eu-west-2".to_string());
-        let aws_bucket = std::env::var("S3_BUCKET_NAME").expect("Failed to get AWS Bucket key");
         let aws_config = aws_sdk_s3::config::Builder::new()
-            .region(aws_sdk_s3::Region::new(s3_region))
-            .credentials_provider(aws_sdk_s3::Credentials::new(
+            .region(Region::new(s3_region.clone()))
+            .credentials_provider(Credentials::new(
                 aws_key,
                 aws_key_secret,
                 None,
@@ -107,7 +124,9 @@ mod tests {
             ))
             .build();
 
-        S3Bucket::new(aws_config, &aws_bucket)
+        let bucket = S3Bucket::new(aws_config, &s3_region, &aws_bucket);
+
+        Ok(bucket)
     }
 
     #[tokio::test]
@@ -118,14 +137,18 @@ mod tests {
             .map(char::from)
             .collect();
 
-        let bucket = bucket_singleton().await;
+        let bucket = bucket_singleton().await?;
 
-        let url = bucket.upload_object(
-            "c:\\Users\\Hector.C\\desktop\\projects\\ribasome\\assets\\glb\\Eye_AMD_Atrophy.glb",
-            format!("{}.glb", &key).as_str(),
-        ).await?;
+        let url = bucket
+            .upload_object(
+                "/Users/hectorcrean/projects/bibe_server/assets/glb/Eye_AMD_Atrophy.glb",
+                format!("{}.glb", &key).as_str(),
+            )
+            .await?;
 
         println!("{}", url);
+
+        assert_eq!(1, 1);
 
         Ok(())
     }
