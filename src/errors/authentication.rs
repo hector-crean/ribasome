@@ -1,3 +1,6 @@
+use axum::response::IntoResponse;
+use http::StatusCode;
+
 /// ReciteError enumerates all possible errors returned by this library.
 #[derive(thiserror::Error, Debug)]
 pub enum SignupError {
@@ -13,6 +16,18 @@ pub enum SignupError {
     InvalidPassword,
     #[error("Internal errors")]
     InternalError,
+}
+
+impl IntoResponse for SignupError {
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            SignupError::UsernameExists(username) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, format!("{}", username)).into_response()
+            }
+
+            _ => (StatusCode::INTERNAL_SERVER_ERROR, format!("Unkown Error")).into_response(),
+        }
+    }
 }
 
 /// ReciteError enumerates all possible errors returned by this library.

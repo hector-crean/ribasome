@@ -28,11 +28,12 @@ const COOKIE_MAX_AGE: &str = "9999999";
 #[derive(Clone)]
 pub struct AppState {
     pool: Pool<Postgres>,
+    random: Random,
 }
 
 impl AppState {
-    pub fn new(pool: Pool<Postgres>) -> Self {
-        Self { pool }
+    pub fn new(pool: Pool<Postgres>, random: Random) -> Self {
+        Self { pool, random }
     }
 
     pub async fn router(self) -> errors::Result<axum::Router> {

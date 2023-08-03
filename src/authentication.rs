@@ -7,9 +7,10 @@ use pbkdf2::{
 use rand_core::{OsRng, RngCore};
 use sqlx::{Pool, Postgres};
 use std::str::FromStr;
+use uuid::Uuid;
 
-#[derive(Clone, Copy)]
-pub(crate) struct SessionToken(u128);
+#[derive(Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
+pub struct SessionToken(u128);
 
 impl FromStr for SessionToken {
     type Err = <u128 as FromStr>::Err;
@@ -67,7 +68,7 @@ impl AuthState {
 pub(crate) async fn new_session(
     database: &Pool<Postgres>,
     random: Random,
-    user_id: i32,
+    user_id: Uuid,
 ) -> SessionToken {
     const QUERY: &str = "INSERT INTO sessions (session_token, user_id) VALUES ($1, $2);";
 

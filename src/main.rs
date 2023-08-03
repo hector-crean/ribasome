@@ -1,8 +1,13 @@
 use dotenv::dotenv;
 use ribasome_server::{errors, AppState};
 use sqlx::postgres::PgPoolOptions;
-use std::env;
-use std::net::SocketAddr;
+
+use std::{
+    convert::AsRef,
+    env,
+    net::SocketAddr,
+    sync::{Arc, Mutex},
+};
 
 use tower_http::{
     cors::{Any, CorsLayer},
@@ -16,7 +21,9 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use std::convert::AsRef;
+use pbkdf2::password_hash::rand_core::OsRng;
+use rand_chacha::ChaCha8Rng;
+use rand_core::{RngCore, SeedableRng};
 
 #[tokio::main]
 async fn main() -> errors::Result<()> {
@@ -39,7 +46,11 @@ async fn main() -> errors::Result<()> {
         .await
         .expect("can't connect to database");
 
-    let router = AppState::new(pool).router().await?;
+    let random = ChaCha8Rng::seed_from_u64(OsRng.next_u64());
+
+    let router = AppState::new(pool, Arc::new(Mutex::new(random)))
+        .router()
+        .await?;
 
     axum::Server::bind(&addr)
         .serve(router.into_make_service())
@@ -81,7 +92,11 @@ mod tests {
             .await
             .expect("can't connect to database");
 
-        let router = AppState::new(pool).router().await?;
+        let random = ChaCha8Rng::seed_from_u64(OsRng.next_u64());
+
+        let router = AppState::new(pool, Arc::new(Mutex::new(random)))
+            .router()
+            .await?;
 
         tokio::spawn(async move {
             axum::Server::bind(&addr)
@@ -94,9 +109,9 @@ mod tests {
 
         // Create a `CreateUser` instance
         let user = CreateUser {
-            username: "roby_crean".to_string(),
-            email: "roby.crea@r42.com".to_string(),
-            password_hash: "robocop".to_string(),
+            username: "leon_cav".to_string(),
+            email: "leon@r42.com".to_string(),
+            password: "leonardo".to_string(),
             role: Role::User,
         };
 
