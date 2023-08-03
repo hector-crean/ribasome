@@ -5,7 +5,7 @@ pub mod user;
 
 use axum::response::{IntoResponse, Response};
 use http::StatusCode;
-use serde::{Deserialize, Serialize};
+
 
 trait RibasomeApi {}
 
@@ -29,7 +29,7 @@ impl IntoResponse for DatabaseError {
                 (StatusCode::INTERNAL_SERVER_ERROR, format!("{}", err)).into_response()
             }
             DatabaseError::Unknown => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("Unkown Error")).into_response()
+                (StatusCode::INTERNAL_SERVER_ERROR, "Unkown Error".to_string()).into_response()
             }
         }
     }

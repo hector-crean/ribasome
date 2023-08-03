@@ -3,24 +3,13 @@ use ribasome_server::{errors, AppState};
 use sqlx::postgres::PgPoolOptions;
 
 use std::{
-    convert::AsRef,
     env,
     net::SocketAddr,
     sync::{Arc, Mutex},
 };
 
-use tower_http::{
-    cors::{Any, CorsLayer},
-    trace::{DefaultMakeSpan, DefaultOnResponse, TraceLayer},
-};
-use tracing::Level;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use axum::{
-    extract::ConnectInfo,
-    routing::{get, post},
-    Json, Router,
-};
 use pbkdf2::password_hash::rand_core::OsRng;
 use rand_chacha::ChaCha8Rng;
 use rand_core::{RngCore, SeedableRng};
@@ -63,21 +52,13 @@ async fn main() -> errors::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::{
-        body::Body,
-        extract::connect_info::MockConnectInfo,
-        http::{self, Request, StatusCode},
-    };
-    use ribasome_server::{
-        authentication::SessionToken,
-        models::user::{Role, User},
-        services::user::post::{CreateUser, CreateUserResponse},
-    };
-    use serde_json::{json, Value};
+
+    use ribasome_server::services::user::post::{CreateUser, CreateUserResponse};
+    use serde_json::json;
     use std::net::SocketAddr;
-    use tokio::net::TcpListener;
-    use tower::Service; // for `call`
-    use tower::ServiceExt; // for `oneshot` and `ready`
+
+    // for `call`
+    // for `oneshot` and `ready`
 
     #[tokio::test]
     async fn mock_create_user() -> errors::Result<()> {

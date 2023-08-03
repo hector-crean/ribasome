@@ -1,26 +1,25 @@
-use std::str::FromStr;
+
 
 use crate::{
     authentication::{new_session, SessionToken},
     errors::authentication::SignupError,
-    models::user::{Role, User},
-    services::DatabaseError,
+    models::user::{Role},
     AppState,
 };
 
 use axum::{
     extract::State,
-    response::{IntoResponse, Json},
+    response::{Json},
 };
 use pbkdf2::{
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{PasswordHasher, SaltString},
     Pbkdf2,
 };
 use rand::{
     distributions::{Alphanumeric, Distribution, Standard},
     prelude::*,
 };
-use rand_core::{OsRng, RngCore};
+use rand_core::{OsRng};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

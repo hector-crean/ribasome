@@ -1,10 +1,7 @@
 use crate::{models::user::User, Random, USER_COOKIE_NAME};
 
-use pbkdf2::{
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Pbkdf2,
-};
-use rand_core::{OsRng, RngCore};
+
+use rand_core::{RngCore};
 use sqlx::{Pool, Postgres};
 use std::str::FromStr;
 use uuid::Uuid;

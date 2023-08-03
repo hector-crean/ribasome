@@ -3,7 +3,7 @@ use csv::{ReaderBuilder, WriterBuilder};
 use serde::{self, Deserialize, Serialize};
 use std::{
     fs::File,
-    io::{BufWriter, Write, BufReader},
+    io::{BufWriter, Write},
     path::Path,
 };
 

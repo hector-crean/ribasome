@@ -7,7 +7,7 @@ pub mod services;
 use std::sync::{Arc, Mutex};
 
 use axum::{
-    routing::{get, post},
+    routing::{post},
     Router,
 };
 use http::Method;
