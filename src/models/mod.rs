@@ -7,4 +7,5 @@ pub mod notebook;
 pub mod point;
 pub mod post;
 pub mod scene_3d;
+pub mod uploaded_file;
 pub mod user;

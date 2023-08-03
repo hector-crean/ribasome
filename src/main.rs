@@ -1,6 +1,8 @@
 use dotenv::dotenv;
+use ribasome_server::services::s3::S3Bucket;
 use ribasome_server::{errors, AppState};
 use sqlx::postgres::PgPoolOptions;
+use std::convert::From;
 
 use std::{
     env,
@@ -37,7 +39,7 @@ async fn main() -> errors::Result<()> {
 
     let random = ChaCha8Rng::seed_from_u64(OsRng.next_u64());
 
-    let router = AppState::new(pool, Arc::new(Mutex::new(random)))
+    let router = AppState::new(pool, S3Bucket::new(None), Arc::new(Mutex::new(random)))
         .router()
         .await?;
 
@@ -54,9 +56,10 @@ mod tests {
     use super::*;
 
     use ribasome_server::{
-        models::{linear_algebra::Vec3f64, post::Post},
+        models::{linear_algebra::Vec3, post::Post},
         services::{
             marker_3d::post::CreateMarker3d,
+            s3::S3Bucket,
             thread::post::CreatePost,
             user::post::{CreateUser, CreateUserResponse},
         },
@@ -82,7 +85,7 @@ mod tests {
 
         let random = ChaCha8Rng::seed_from_u64(OsRng.next_u64());
 
-        let router = AppState::new(pool, Arc::new(Mutex::new(random)))
+        let router = AppState::new(pool, S3Bucket::new(None), Arc::new(Mutex::new(random)))
             .router()
             .await?;
 
@@ -122,7 +125,7 @@ mod tests {
             user_id,
             rich_text: "Some top quality content".to_string(),
             create_marker_3d: Some(CreateMarker3d::Point3d {
-                coord: Vec3f64::new(1., 2., 3.),
+                coord: bevy::math::Vec3::new(1., 2., 3.).into(),
             }),
         };
 
