@@ -94,10 +94,10 @@ mod tests {
         let aws_key = std::env::var("AWS_ACCESS_KEY_ID").expect("Failed to get AWS key.");
         let aws_key_secret =
             std::env::var("AWS_SECRET_ACCESS_KEY").expect("Failed to get AWS secret key.");
-        let S3_REGION = std::env::var("S3_REGION").unwrap_or("eu-west-2".to_string());
+        let s3_region = std::env::var("S3_REGION").unwrap_or("eu-west-2".to_string());
         let aws_bucket = std::env::var("S3_BUCKET_NAME").expect("Failed to get AWS Bucket key");
         let aws_config = aws_sdk_s3::config::Builder::new()
-            .region(aws_sdk_s3::Region::new(S3_REGION))
+            .region(aws_sdk_s3::Region::new(s3_region))
             .credentials_provider(aws_sdk_s3::Credentials::new(
                 aws_key,
                 aws_key_secret,
