@@ -9,7 +9,12 @@ use std::sync::{Arc, Mutex};
 use axum::{routing::post, Router};
 use http::Method;
 use rand_chacha::ChaCha8Rng;
-use services::{marker_3d, markup, s3::S3Bucket, thread, user};
+use services::{
+    marker_3d, markup,
+    s3::S3Bucket,
+    thread,
+    user::{self, get::get_users},
+};
 use sqlx::{Pool, Postgres};
 use tower_http::{
     cors::{Any, CorsLayer},

@@ -75,7 +75,7 @@ mod tests {
     use super::*;
 
     use ribasome_server::{
-        models::post::Post,
+        models::{post::Post, user::User},
         services::{
             marker_3d::post::CreateMarker3d,
             s3::S3Bucket,
@@ -92,7 +92,7 @@ mod tests {
     async fn router_instance() -> errors::Result<(SocketAddr, axum::Router)> {
         dotenv().ok();
 
-        let addr = SocketAddr::from(([127, 0, 0, 1], 1691));
+        let addr = SocketAddr::from(([127, 0, 0, 1], 1699));
 
         let db_url = env::var("DATABASE_URL").unwrap(); // Unwrap here for simplicity in tests
 
@@ -175,6 +175,35 @@ mod tests {
             .await?;
 
         println!("{:?}", &post_resp);
+
+        assert_eq!(1, 1);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn mock_list_users() -> errors::Result<()> {
+        dotenv().ok();
+
+        let (addr, router) = router_instance().await?;
+
+        tokio::spawn(async move {
+            axum::Server::bind(&addr)
+                .serve(router.into_make_service())
+                .await
+                .unwrap();
+        });
+
+        let client = reqwest::Client::new();
+
+        let users = client
+            .get(format!("http://{}/v1/api/users", addr))
+            .send()
+            .await?
+            .json::<Vec<User>>()
+            .await?;
+
+        println!("{:?}", &users);
 
         assert_eq!(1, 1);
 
