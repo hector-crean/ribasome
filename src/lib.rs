@@ -59,7 +59,7 @@ impl AppState {
         let router = Router::new()
             .layer(cors_layer)
             .layer(trace_layer)
-            .route("/users", post(user::post::create_user))
+            .route("/users", post(user::post::create_user).get(get_users))
             .route("/comments", post(markup::post::create_comment))
             .route("/marker3ds", post(marker_3d::post::create_marker_3d))
             .route("/posts", post(thread::post::create_post))
